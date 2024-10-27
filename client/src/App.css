@@ -1,0 +1,115 @@
+.App {
+  text-align: center;
+  font-family: 'Arial', sans-serif; /* Tipografía moderna */
+  background-color: #f7f7f7; /* Fondo claro para resaltar el contenido */
+  color: #333; /* Color de texto oscuro */
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #6a1b9a; /* Color morado atractivo */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+.App-link {
+  color: #ffeb3b; /* Color amarillo para enlaces */
+  text-decoration: none;
+  font-weight: bold; /* Negrita para destacar enlaces */
+}
+
+.App-link:hover {
+  text-decoration: underline; /* Subrayado al pasar el mouse */
+}
+
+/* Estilos para el sidebar */
+.sidebar {
+  background-color: rgba(111, 44, 145, 0.9); /* Color morado con transparencia */
+  height: 100vh; /* Ocupa toda la altura de la ventana */
+  position: fixed;
+  left: 0;
+  top: 0;
+  transition: width 0.3s ease;
+  width: 200px; /* Ancho del sidebar */
+  z-index: 1000; /* Asegúrate de que esté por encima de otros elementos */
+}
+
+/* Estilo para los enlaces del sidebar */
+.nav-link {
+  color: white; /* Color del texto del enlace */
+  padding: 10px; /* Espaciado alrededor de los enlaces */
+  transition: background-color 0.3s; /* Transición suave */
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1); /* Efecto hover */
+}
+
+/* Estilos para la tabla de productos */
+.table {
+  margin-top: 20px; /* Espacio superior para la tabla */
+  border-radius: 5px; /* Bordes redondeados */
+  overflow: hidden; /* Asegura que los bordes redondeados se mantengan */
+}
+
+.table th {
+  background-color: #6a1b9a; /* Encabezado de tabla con color morado */
+  color: white; /* Texto blanco en el encabezado */
+}
+
+.table td {
+  background-color: #fff; /* Fondo blanco para las celdas */
+  color: #333; /* Texto oscuro */
+}
+
+/* Estilos para los botones */
+.btn-primary {
+  background-color: #ff4081; /* Color rosa para botones primarios */
+  border-color: #ff4081; /* Borde del botón */
+}
+
+.btn-primary:hover {
+  background-color: #ff80ab; /* Color más claro al pasar el mouse */
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 60px; /* Ancho más pequeño en pantallas pequeñas */
+  }
+
+  .content-wrapper {
+    margin-left: 60px; /* Ajusta el margen del contenido cuando el sidebar es más pequeño */
+  }
+
+  .table-container {
+    padding: 10px; /* Asegúrate de que haya un poco de espaciado */
+  }
+}
+
+@media (max-width: 576px) {
+  .sidebar {
+    display: none; /* Esconde el sidebar en pantallas muy pequeñas */
+  }
+
+  .content-wrapper {
+    margin-left: 0; /* Elimina el margen cuando el sidebar está escondido */
+  }
+}
