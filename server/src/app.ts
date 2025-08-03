@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors'; // Importa el middleware de CORS
 import productRoutes from './routes/productRoutes';
 import mesaRoutes from './routes/mesaRoutes';
+import ventaRoutes from './routes/ventaRoutes';
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 
 app.use('/api/', productRoutes);
 app.use('/api/', mesaRoutes);
+app.use('/api/', ventaRoutes);
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
 

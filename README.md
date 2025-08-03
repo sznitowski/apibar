@@ -1,8 +1,8 @@
 # apibar
 
-Estructura del Backend
+# ------------------ Estructura del Backend ------------------ #
 
-server/
+<server/>
 ├── node_modules/
 ├── src/
 │   ├── controllers/
@@ -28,10 +28,9 @@ server/
 ├── package.json
 ├── tsconfig.json
 
+# ------------------ Estructura del Frontend ------------------ #
 
-
-    
-frontend/
+<frontend/>
   public/
   src/
     components/
@@ -50,25 +49,34 @@ frontend/
     index.tsx
 
 
-
+<Base de datos>
+<Tablas>
 
 
 --------------------------------------
 
 
 
+🔁 Flujo de funcionamiento
+Usuario se sienta → se crea un venta con id_mesa y fecha_inicio.
 
-Estructura del Frontend
+Se van cargando productos a través de detalle_venta.
 
-client/
-├── node_modules/
-├── public/
-├── src/
-│   ├── components/
-│   ├── views/
-│   ├── App.css
-│   ├── App.tsx
-│   ├── index.css
-├── .env
-├── package.json
-├── tsconfig-lock.json
+Al presionar "Pagar", se:
+
+Calcula costo_total.
+
+Se guarda tipo_pago.
+
+Se registra fecha_fin.
+
+Se calcula tiempo_uso.
+
+
+
+✅ Ventajas
+Tenés historial completo de ventas.
+
+Podés hacer reportes por fecha, por producto, por tipo de pago.
+
+Podés incluso agregar descuentos, propinas o mozos en el futuro.
