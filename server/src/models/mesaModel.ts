@@ -75,7 +75,7 @@ export const deleteMesa = async (id: number) => {
     throw error;
   }
 };
-
+/* 
 // Obtener mesas con consumo total
 export const getMesasConsumo = async () => {
   try {
@@ -114,7 +114,7 @@ export const setConsumoForMesa = async (id_mesa: number, productIds: number[]) =
     throw error;
   }
 };
-
+ */
 // Obtener todos los productos
 export const getAllProductos = async () => {
   try {
@@ -128,7 +128,7 @@ export const getAllProductos = async () => {
     throw error;
   }
 };
-
+/* 
 // Crear consumo nuevo
 export const createConsumo = async (
   id_mesa: number,
@@ -149,3 +149,4 @@ export const createConsumo = async (
     throw error;
   }
 };
+ */

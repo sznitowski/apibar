@@ -75,36 +75,6 @@ export const deleteMesa = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-export const getMesasConsumo = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const mesas = await mesaModel.getMesasConsumo();
-    res.json(mesas);
-  } catch (error) {
-    res.status(500).json({ error: 'Error fetching mesas' });
-  }
-};
-
-
-// CONSUMO -----------------------------------------------------------------------------
-export const getConsumosByMesa = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id_mesa } = req.params;
-    const { productIds } = req.body;
-
-    if (!Array.isArray(productIds)) {
-      res.status(400).json({ error: "productIds debe ser un array" });
-      return; // 👈 esto evita que se ejecute lo de abajo si hay error
-    }
-
-    await mesaModel.setConsumoForMesa(Number(id_mesa), productIds);
-    res.json({ message: "Consumo actualizado" });
-  } catch (error) {
-    console.error(`Error updating consumo: ${error}`);
-    res.status(500).json({ error: "Error actualizando consumo" });
-  }
-};
-
-
 // Obtener todos los productos disponibles
 export const getAllProductos = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -113,23 +83,5 @@ export const getAllProductos = async (req: Request, res: Response): Promise<void
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error fetching productos' });
-  }
-};
-
-// Crear un nuevo consumo
-export const createConsumo = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id_mesa, id_producto, cantidad } = req.body;
-
-    if (!id_mesa || !id_producto || !cantidad) {
-      res.status(400).json({ error: 'Missing required fields: id_mesa, id_producto, cantidad' });
-      return;
-    }
-
-    const consumoId = await mesaModel.createConsumo(id_mesa, id_producto, cantidad);
-    res.status(201).json({ id: consumoId });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error creating consumo' });
   }
 };
