@@ -75,46 +75,7 @@ export const deleteMesa = async (id: number) => {
     throw error;
   }
 };
-/* 
-// Obtener mesas con consumo total
-export const getMesasConsumo = async () => {
-  try {
-    const [rows] = await pool.query(`
-      SELECT m.*, SUM(c.cantidad * p.price) AS total_consumo
-      FROM mesas m
-      LEFT JOIN consumos c ON m.id = c.id_mesa
-      LEFT JOIN products p ON c.id_producto = p.id
-      GROUP BY m.id
-    `);
-    logger.info('Mesas con consumo fetched');
-    console.log('✅ Mesas con consumo fetched');
-    return rows;
-  } catch (error) {
-    logger.error('Error fetching mesas con consumo', { error });
-    console.error('❌ Error fetching mesas con consumo:', error);
-    throw error;
-  }
-};
 
-// Asociar consumo a mesa
-export const setConsumoForMesa = async (id_mesa: number, productIds: number[]) => {
-  try {
-    for (const id_producto of productIds) {
-      await pool.query(
-        `INSERT INTO consumos (id_mesa, id_producto, cantidad) VALUES (?, ?, 1)
-         ON DUPLICATE KEY UPDATE cantidad = cantidad + 1`,
-        [id_mesa, id_producto]
-      );
-    }
-    logger.info(`Consumo actualizado para mesa ID ${id_mesa} con productos ${productIds.join(', ')}`);
-    console.log(`✅ Consumo actualizado para mesa ID ${id_mesa} con productos ${productIds.join(', ')}`);
-  } catch (error) {
-    logger.error(`Error actualizando consumo en mesa ${id_mesa}`, { error });
-    console.error(`❌ Error actualizando consumo en mesa ${id_mesa}:`, error);
-    throw error;
-  }
-};
- */
 // Obtener todos los productos
 export const getAllProductos = async () => {
   try {
@@ -128,25 +89,3 @@ export const getAllProductos = async () => {
     throw error;
   }
 };
-/* 
-// Crear consumo nuevo
-export const createConsumo = async (
-  id_mesa: number,
-  id_producto: number,
-  cantidad: number
-) => {
-  try {
-    const [result] = await pool.query<ResultSetHeader>(
-      'INSERT INTO consumos (id_mesa, id_producto, cantidad) VALUES (?, ?, ?)',
-      [id_mesa, id_producto, cantidad]
-    );
-    logger.info(`Nuevo consumo en mesa ${id_mesa}: producto ${id_producto}, cantidad ${cantidad}`);
-    console.log(`✅ Nuevo consumo en mesa ${id_mesa}: producto ${id_producto}, cantidad ${cantidad}`);
-    return result.insertId;
-  } catch (error) {
-    logger.error('Error creando consumo', { error });
-    console.error('❌ Error creando consumo:', error);
-    throw error;
-  }
-};
- */

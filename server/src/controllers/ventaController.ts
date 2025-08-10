@@ -57,57 +57,58 @@ export const getResumenVentas = async (_req: Request, res: Response): Promise<vo
   }
 };
 
-// GET /ventas/stock
-// Soporta filtros opcionales:
-//   /ventas/stock?q=quilmes&category=alcohol
-export const getStockResumen = async (req: Request, res: Response): Promise<void> => {
+// helper para normalizar listas desde query (?a=x,y,z o ?a=x&a=y)
+const toArray = (v: unknown): string[] | undefined => {
+  if (v === undefined || v === null) return undefined;
+  if (Array.isArray(v)) return v.map(String).map(s => s.trim()).filter(Boolean);
+  const s = String(v).trim();
+  if (!s) return undefined;
+  return s.includes(',') ? s.split(',').map(t => t.trim()).filter(Boolean) : [s];
+};
+
+//   - meta=products&q= -> sugerencias de productos (id, name, category)
+//   - sin meta         -> resumen de stock con filtros (si lo querés usar también acá)
+export const getStockResumen = async (req: Request, res: Response) => {
   try {
-    const rows = await obtenerStockResumen();
+    const { meta, q, limit } = req.query;
 
-    const q = String(req.query.q || '').trim().toLowerCase();
-    const category = String(req.query.category || '').trim();
+    const categorias = toArray(req.query.categorias ?? req.query.category);
+    const idsStr = toArray(req.query.ids);
+    const ids = idsStr?.map(n => Number(n)).filter(n => !Number.isNaN(n));
 
-    // Filtro en controller (sin tocar el model)
-    const filtrado = rows.filter((r) => {
-      const okQ = q ? (r.name || '').toLowerCase().includes(q) : true;
-      const okCat = category ? (r.category || '') === category : true;
-      return okQ && okCat;
+    const data = await obtenerStockResumen({
+      meta: typeof meta === 'string' ? (meta as 'categories' | 'products') : undefined,
+      q: typeof q === 'string' ? q : undefined,
+      limit: limit ? Number(limit) : undefined,
+      categorias,
+      ids,
     });
 
-    res.json(filtrado);
-  } catch (error) {
-    const err = error as Error;
-    res.status(500).json({
-      error: 'Error al obtener resumen de stock',
-      details: err.message,
-    });
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: 'Error al obtener stock', details: (e as Error).message });
   }
 };
 
-export const getVentasDetalladas = async (req: Request, res: Response): Promise<void> => {
+export const getVentasDetalladas = async (req: Request, res: Response) => {
   try {
-    const { from, to, mesa, categoria, pago } = req.query;
+    const { from, to, pago, q } = req.query;
 
-    const params = {
-      from: typeof from === "string" && from.trim() ? from.trim() : undefined,
-      to:   typeof to   === "string" && to.trim()   ? to.trim()   : undefined,
-      mesa: typeof mesa === "string" && mesa.trim() ? Number(mesa) : undefined,
-      categoria: typeof categoria === "string" && categoria.trim() ? categoria.trim() : undefined,
-      pago: typeof pago === "string" && pago.trim() ? pago.trim() : undefined,
-    };
+    const categorias = toArray(req.query.categorias ?? req.query.categoria);
+    const productosStr = toArray(req.query.productos ?? req.query.producto);
+    const productos = productosStr?.map(n => Number(n)).filter(n => !Number.isNaN(n));
 
-    if (params.mesa !== undefined && Number.isNaN(params.mesa)) {
-      res.status(400).json({ error: 'Parámetro "mesa" inválido' });
-      return;
-    }
-
-    const rows = await obtenerVentasDetalladas(params);
-    res.json(rows);
-  } catch (error) {
-    const err = error as Error;
-    res.status(500).json({
-      error: "Error al obtener ventas detalladas",
-      details: err.message,
+    const rows = await obtenerVentasDetalladas({
+      from: typeof from === 'string' && from.trim() ? from.trim() : undefined,
+      to:   typeof to   === 'string' && to.trim()   ? to.trim()   : undefined,
+      pago: typeof pago === 'string' && pago.trim() ? pago.trim() : undefined,
+      categorias,
+      productos,
+      q: typeof q === 'string' && q.trim() ? q.trim() : undefined,
     });
+
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: 'Error al obtener ventas detalladas', details: (e as Error).message });
   }
 };

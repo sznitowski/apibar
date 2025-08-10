@@ -14,6 +14,17 @@ interface ProductoRow extends RowDataPacket {
   stock: number;
 }
 
+interface CategoryRow extends RowDataPacket {
+  category: string;
+}
+
+interface ProductMiniRow extends RowDataPacket {
+  id: number;
+  name: string;
+  category: string;
+}
+
+
 export interface DetalleConsumo extends RowDataPacket {
   id_venta: number;
   id_mesa: number;
@@ -202,50 +213,134 @@ export const obtenerResumenVentas = async (): Promise<ResumenVenta[]> => {
 };
 
 /** ===== Stock resumen (con nombre y categoría) ===== */
-export const obtenerStockResumen = async (): Promise<StockResumen[]> => {
-  try {
-    const [rows] = await pool.query<StockResumen[]>(
-      `SELECT
-         p.id,
-         p.name       AS name,
-         p.category   AS category,
-         p.price      AS price,
-         p.stock      AS stock_actual,
-         IFNULL(SUM(d.cantidad), 0)             AS total_vendido,
-         (p.stock + IFNULL(SUM(d.cantidad), 0)) AS stock_inicial
-       FROM products p
-       LEFT JOIN detalle_venta d ON d.id_producto = p.id
-       GROUP BY p.id, p.name, p.category, p.price, p.stock
-       ORDER BY p.name`
-    );
-    return rows;
-  } catch (error) {
-    const err = error as Error;
-    logger.error('Error en obtenerStockResumen', { message: err.message, stack: err.stack });
-    throw err;
+// src/models/ventaModel.ts
+export const obtenerStockResumen = async (opts?: {
+  q?: string;                         // búsqueda por nombre de producto
+  categorias?: string[] | string;     // una o varias categorías
+  ids?: number[] | number;            // una o varias IDs de productos
+  meta?: 'categories' | 'products';   // modo meta
+  limit?: number;                     // límite para meta=products
+}): Promise<any[]> => {
+  const { q, categorias, ids, meta, limit } = opts || {};
+
+  // ---- META: devolver solo categorías únicas
+if (meta === 'categories') {
+  const [rows] = await pool.query<CategoryRow[]>(
+    `SELECT DISTINCT category
+       FROM products
+      WHERE category IS NOT NULL AND category <> ''
+      ORDER BY category`
+  );
+  return rows.map(r => r.category);
+}
+
+  // ---- META: sugerencias de productos por texto
+ if (meta === 'products') {
+  const L = Math.max(1, Math.min(Number(limit || 20), 100));
+  const like = q ? `%${q.trim()}%` : '%';
+  const [rows] = await pool.query<ProductMiniRow[]>(
+    `SELECT id, name, category
+       FROM products
+      WHERE name LIKE ?
+      ORDER BY name
+      LIMIT ?`,
+    [like, L]
+  );
+  return rows;
+}
+
+  // ---- Comportamiento normal (resumen de stock), con filtros opcionales
+  const where: string[] = [];
+  const bind: any[] = [];
+
+  if (q && q.trim()) {
+    where.push(`p.name LIKE ?`);
+    bind.push(`%${q.trim()}%`);
   }
+
+  if (categorias) {
+    const cats = Array.isArray(categorias) ? categorias : [categorias];
+    if (cats.length) {
+      where.push(`p.category IN (${cats.map(() => '?').join(',')})`);
+      bind.push(...cats);
+    }
+  }
+
+  if (ids) {
+    const arr = Array.isArray(ids) ? ids : [ids];
+    if (arr.length) {
+      where.push(`p.id IN (${arr.map(() => '?').join(',')})`);
+      bind.push(...arr.map(Number));
+    }
+  }
+
+  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+
+  const sql = `
+    SELECT
+      p.id,
+      p.name       AS name,
+      p.category   AS category,
+      p.price      AS price,
+      p.stock      AS stock_actual,
+      IFNULL(SUM(d.cantidad), 0)             AS total_vendido,
+      (p.stock + IFNULL(SUM(d.cantidad), 0)) AS stock_inicial
+    FROM products p
+    LEFT JOIN detalle_venta d ON d.id_producto = p.id
+    ${whereSql}
+    GROUP BY p.id, p.name, p.category, p.price, p.stock
+    ORDER BY p.name
+  `;
+
+  const [rows] = await pool.query<StockResumen[]>(sql, bind);
+  return rows;
 };
+
 
 /** ===== Ventas detalladas para dashboard (con filtros opcionales) =====
  *  Params soportados: from, to (YYYY-MM-DD), mesa, categoria, pago
  */
+// models/ventaModel.ts
 export const obtenerVentasDetalladas = async (params?: {
   from?: string;
   to?: string;
-  mesa?: number;
-  categoria?: string;
   pago?: string;
+  categorias?: string[] | string;  // <- NUEVO (una o varias)
+  productos?: number[] | number;   // <- NUEVO (ids)
+  q?: string;                      // <- NUEVO (búsqueda por nombre de producto)
 }): Promise<VentaDetallada[]> => {
-  const { from, to, mesa, categoria, pago } = params || {};
+  const { from, to, pago, categorias, productos, q } = params || {};
 
   const where: string[] = [];
   const bind: any[] = [];
 
   if (from) { where.push(`v.fecha_inicio >= ?`); bind.push(`${from} 00:00:00`); }
   if (to)   { where.push(`v.fecha_inicio <  ?`); bind.push(`${to} 00:00:00`); }
-  if (typeof mesa === 'number') { where.push(`v.id_mesa = ?`); bind.push(mesa); }
-  if (categoria) { where.push(`p.category = ?`); bind.push(categoria); }
   if (pago) { where.push(`v.tipo_pago = ?`); bind.push(pago); }
+
+  // categorias (uno o varios)
+  if (categorias) {
+    const cats = Array.isArray(categorias) ? categorias : [categorias];
+    if (cats.length) {
+      where.push(`p.category IN (${cats.map(() => '?').join(',')})`);
+      bind.push(...cats);
+    }
+  }
+
+  // productos por id (uno o varios)
+  if (productos) {
+    const ids = Array.isArray(productos) ? productos : [productos];
+    if (ids.length) {
+      where.push(`p.id IN (${ids.map(() => '?').join(',')})`);
+      bind.push(...ids.map(Number));
+    }
+  }
+
+  // búsqueda por texto en nombre de producto
+  if (q && q.trim()) {
+    where.push(`p.name LIKE ?`);
+    bind.push(`%${q.trim()}%`);
+  }
 
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
@@ -295,7 +390,7 @@ export const obtenerVentasDetalladas = async (params?: {
       vm.subtotal_por_venta,
       CASE WHEN vm.subtotal_por_venta > 0
            THEN ROUND(100 * b.subtotal_item / vm.subtotal_por_venta, 2)
-           ELSE 0 END                     AS pct_item_en_ticket,
+           ELSE 0 END  AS pct_item_en_ticket,
       ROW_NUMBER() OVER (PARTITION BY b.id_venta ORDER BY b.subtotal_item DESC) AS rank_item_importe,
       ROW_NUMBER() OVER (PARTITION BY b.id_venta ORDER BY b.cantidad      DESC) AS rank_item_cantidad
     FROM base b
@@ -303,12 +398,8 @@ export const obtenerVentasDetalladas = async (params?: {
     ORDER BY b.fecha_inicio DESC, b.id_venta, rank_item_importe
   `;
 
-  try {
-    const [rows] = await pool.query<VentaDetallada[]>(sql, bind);
-    return rows;
-  } catch (error) {
-    const err = error as Error;
-    logger.error('Error en obtenerVentasDetalladas', { message: err.message, stack: err.stack, params });
-    throw err;
-  }
+  const [rows] = await pool.query<VentaDetallada[]>(sql, bind);
+  return rows;
 };
+
+
