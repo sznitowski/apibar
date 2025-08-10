@@ -13,6 +13,7 @@ import {
   clearTempMesaData,
   setAllTempMesaData,
 } from "../actions/mesaActions";
+import Alert from "../alert/Alert";
 import { fetchProducts } from "../actions/productActions";
 import clsx from "clsx";
 
@@ -43,12 +44,15 @@ function MesaOperations({
     selectedProducts: [],
   });
   const [tipoPago, setTipoPago] = useState("efectivo");
+  const [alertMessage, setAlertMessage] = useState(null);
+  const [alertType, setAlertType] = useState("success");
 
   const timerRef = useRef(null);
   const latestMesaRef = useRef(selectedMesa);
   const latestTotalRef = useRef(totalConsumo);
 
   const [isCardView, setIsCardView] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   useEffect(() => {
     fetchMesasConsumo();
@@ -154,7 +158,10 @@ function MesaOperations({
 
   const handleGuardarConsumo = () => {
     if (selectedMesa.selectedProducts.length === 0) {
-      alert("Debes seleccionar al menos un producto.");
+      setAlertType("success");
+      setAlertMessage("Venta registrada correctamente.");
+      setTimeout(() => setAlertMessage(null), 3000);
+
       return;
     }
 
@@ -170,7 +177,9 @@ function MesaOperations({
 
   const handlePagar = async () => {
     if (selectedMesa.selectedProducts.length === 0) {
-      alert("No hay productos para cobrar.");
+      setAlertType("warning");
+      setAlertMessage("No hay productos para cobrar.");
+      setTimeout(() => setAlertMessage(null), 3000);
       return;
     }
 
@@ -204,10 +213,14 @@ function MesaOperations({
       clearTempMesaData(selectedMesa.id);
       setShowModal(false);
 
-      alert("Venta registrada correctamente.");
+      setAlertType("success");
+      setAlertMessage("Venta registrada correctamente.");
+      setTimeout(() => setAlertMessage(null), 3000);
     } catch (error) {
       console.error("Error al registrar la venta:", error);
-      alert("Ocurrió un error al registrar la venta.");
+      setAlertType("error");
+      setAlertMessage("Ocurrió un error al registrar la venta.");
+      setTimeout(() => setAlertMessage(null), 3000);
     }
   };
 
@@ -239,6 +252,11 @@ function MesaOperations({
         <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-white">
           Mesas
         </h2>
+        {alertMessage && (
+          <div className="mb-4">
+            <Alert type={alertType} message={alertMessage} />
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-2 bg-gray-800 rounded-lg p-2">
           {/* Botón para cambiar de vista */}
@@ -267,18 +285,7 @@ function MesaOperations({
 
           {/* Botón para reiniciar todas las mesas */}
           <button
-            onClick={() => {
-              if (
-                window.confirm("¿Estás seguro de reiniciar todas las mesas?")
-              ) {
-                Object.keys(consumoTemporal).forEach((mesaId) =>
-                  clearTempMesaData(Number(mesaId))
-                );
-                localStorage.removeItem("mesaTemporalData");
-                setTiempoOcupada(0);
-                setCronometroActivo(false);
-              }
-            }}
+            onClick={() => setShowConfirmModal(true)}
             className="px-3 py-1 text-sm rounded-md bg-red-600 text-white hover:bg-red-700 transition"
           >
             Reiniciar
@@ -511,6 +518,45 @@ function MesaOperations({
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded"
               >
                 Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-gray-800  p-6 rounded-lg shadow-md w-full max-w-sm text-white">
+            <h2 className="text-lg font-bold mb-4 text-white text-center">
+              ¿Estás seguro?
+            </h2>
+
+            <p className="text-sm text-gray-300 text-center mb-6">
+              Esto reiniciará todas las mesas y eliminará el consumo temporal.
+            </p>
+
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => {
+                  Object.keys(consumoTemporal).forEach((mesaId) =>
+                    clearTempMesaData(Number(mesaId))
+                  );
+                  localStorage.removeItem("mesaTemporalData");
+                  setTiempoOcupada(0);
+                  setCronometroActivo(false);
+                  setShowConfirmModal(false);
+                  setAlertType("warning");
+                  setAlertMessage("Todas las mesas fueron reiniciadas.");
+                  setTimeout(() => setAlertMessage(null), 3000);
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded"
+              >
+                Confirmar
+              </button>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
+              >
+                Cancelar
               </button>
             </div>
           </div>

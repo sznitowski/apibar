@@ -1,44 +1,34 @@
-import { useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+// src/App.js
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Layout from "./components/layout/Layout";
+
 import ProductOperations from "./components/views/ProductOperations";
 import MesaOperations from "./components/views/MesaOperations";
-import Sidebar from "./components/sidebar/Sidebar";
-import Navbar from "./components/sidebar/Navbar";
+
+import VentasDashboardView from "./components/views/ventas/VentasDashboardView"; // ventas (nuevo)
+import StockResumen from "./components/views/ventas/StockResumen";                // stock (tu dashboard de stock)
+
 import "./index.css";
 
-function App() {
-  const [collapsed, setCollapsed] = useState(false);
-  const [darkMode, setDarkMode] = useState(
-    localStorage.getItem("theme") === "dark"
-  );
-
-  const toggleTheme = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    document.documentElement.classList.toggle("dark", newMode);
-    localStorage.setItem("theme", newMode ? "dark" : "light");
-  };
-
+export default function App() {
   return (
     <BrowserRouter>
-      <div className="flex">
-        <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} darkMode={darkMode} />
-        <div className="flex-1 flex flex-col min-h-screen">
-          <Navbar collapsed={collapsed} darkMode={darkMode} toggleTheme={toggleTheme} />
-          <main
-            className={`transition-all duration-300 p-4 pt-16 overflow-auto w-full ${
-              collapsed ? "ml-16" : "ml-60"
-            }`}
-          >
-            <Routes>
-              <Route path="/Productos" element={<ProductOperations />} />
-              <Route path="/Mesas" element={<MesaOperations />} />
-            </Routes>
-          </main>
-        </div>
-      </div>
+      <Layout>
+        <Routes>
+          {/* Básicos */}
+          <Route path="/Productos" element={<ProductOperations />} />
+          <Route path="/Mesas" element={<MesaOperations />} />
+
+          {/* Ventas */}
+          <Route path="/Ventas/Dashboard" element={<VentasDashboardView />} />
+          <Route path="/Ventas/Stock" element={<StockResumen />} />
+
+          {/* Home -> redirige a Ventas/Stock */}
+          <Route path="/" element={<Navigate to="/Ventas/Stock" replace />} />
+          {/* 404 -> redirige a home */}
+          <Route path="*" element={<Navigate to="/Ventas/Stock" replace />} />
+        </Routes>
+      </Layout>
     </BrowserRouter>
   );
 }
-
-export default App;
