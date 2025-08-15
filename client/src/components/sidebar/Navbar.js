@@ -1,31 +1,27 @@
-import { useState, useRef, useEffect } from "react";
-import { FiLogOut, FiUser, FiSettings, FiBell, FiSun, FiMoon } from "react-icons/fi";
+// src/components/sidebar/Navbar.jsx
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { FiBell, FiSun, FiMoon } from "react-icons/fi";
+import UserMenu from "../user/UserMenu";
+import { logout, updatePerfil, updateAvatar } from "../actions/authActions";
 
-const Navbar = ({ collapsed, darkMode, toggleTheme }) => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef();
+export default function Navbar({ collapsed, darkMode, toggleTheme }) {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector((s) => s.auth.usuario);
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleLogout = () => {
-    console.log("Cerrando sesión...");
+  const handleLogout = async () => {
+    dispatch(logout());
+    navigate("/login", { replace: true });
   };
 
+  const handleSaveProfile = (payload) => dispatch(updatePerfil(payload));
+  const handleChangeAvatar = (file) => dispatch(updateAvatar(file));
+
   return (
-    <nav
-      className={`fixed top-0 h-12 z-50 right-0 transition-all duration-300
+    <nav className={`fixed top-0 h-12 z-50 right-0 transition-all duration-300
       ${collapsed ? "left-16" : "left-60"}
-      bg-gray-900 text-white px-4 flex items-center justify-end border-b border-gray-700`}
-    >
-      {/* Botón Tema */}
+      bg-gray-900 text-white px-4 flex items-center justify-end border-b border-gray-700`}>
       <button
         onClick={toggleTheme}
         className="flex items-center text-sm px-3 py-1 mr-4 rounded bg-gray-800 hover:bg-gray-700"
@@ -34,52 +30,17 @@ const Navbar = ({ collapsed, darkMode, toggleTheme }) => {
         <span className="ml-2">{darkMode ? "Light" : "Dark"}</span>
       </button>
 
-      {/* Notificación */}
       <div className="relative mr-4">
         <FiBell className="w-6 h-6 text-gray-300 cursor-pointer" />
         <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500"></span>
       </div>
 
-      {/* Menú de usuario */}
-      <div className="relative" ref={menuRef}>
-        <img
-          src="https://i.pravatar.cc/40?img=3"
-          alt="avatar"
-          className="w-10 h-10 rounded-full border-2 border-white cursor-pointer"
-          onClick={() => setMenuOpen(!menuOpen)}
-        />
-        {menuOpen && (
-          <div className="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
-            <div className="p-4 flex items-center space-x-3 border-b border-gray-700">
-              <img
-                src="https://i.pravatar.cc/40?img=3"
-                alt="avatar"
-                className="w-10 h-10 rounded-full"
-              />
-              <div>
-                <p className="font-semibold text-white">Rene Wells</p>
-                <p className="text-sm text-gray-400">rene@devias.io</p>
-              </div>
-            </div>
-            <div className="p-2">
-              <button className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded">
-                <FiUser className="mr-2" /> Perfil
-              </button>
-              <button className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded">
-                <FiSettings className="mr-2" /> Seguridad
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 rounded"
-              >
-                <FiLogOut className="mr-2" /> Cerrar sesión
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      <UserMenu
+        user={user}
+        onLogout={handleLogout}
+        onSaveProfile={handleSaveProfile}
+        onChangeAvatar={handleChangeAvatar}
+      />
     </nav>
   );
-};
-
-export default Navbar;
+}
