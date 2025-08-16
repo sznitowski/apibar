@@ -70,6 +70,15 @@ export default function authReducer(state = initialState, action) {
     case AUTH_UPDATE_PROFILE_FAILURE:
       return { ...state, loading: false, error: action.payload };
 
+    case AUTH_UPDATE_PROFILE_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        // mergea sobre el usuario actual
+        usuario: { ...(state.usuario || {}), ...(action.payload || {}) },
+        error: null,
+      };
+
     default:
       return state;
   }

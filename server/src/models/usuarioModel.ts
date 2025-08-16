@@ -64,3 +64,29 @@ export async function actualizarPassword(id: number, nuevoHash: string): Promise
 }
 
 
+// src/models/usuarioModel.ts
+export async function actualizarAvatar(usuarioId: number, avatarUrl: string): Promise<void> {
+  await ejecutar(
+    `UPDATE usuarios SET avatar = ? WHERE id = ?`,
+    [avatarUrl, usuarioId]
+  );
+}
+export async function actualizarPerfil(
+  id: number,
+  data: { nombre?: string; avatar?: string }
+): Promise<UsuarioConRol | null> {
+  const sets: string[] = [];
+  const params: any[] = [];
+
+  if (data.nombre !== undefined) { sets.push('nombre = ?'); params.push(data.nombre); }
+  if (data.avatar !== undefined) { sets.push('avatar = ?'); params.push(data.avatar); }
+
+  if (sets.length === 0) {
+    // nada que actualizar: devolver el actual
+    return obtenerPorId(id);
+  }
+
+  params.push(id);
+  await ejecutar(`UPDATE usuarios SET ${sets.join(', ')} WHERE id = ?`, params);
+  return obtenerPorId(id);
+}

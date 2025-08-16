@@ -9,6 +9,7 @@ import {
   AUTH_UPDATE_PROFILE_REQUEST,
   AUTH_UPDATE_PROFILE_SUCCESS,
   AUTH_UPDATE_PROFILE_FAILURE,
+  
 } from "../actions/types";
 
 // Base de API (CRA usa REACT_APP_*)
@@ -139,17 +140,20 @@ export const updatePerfil = (payload) => async (dispatch, getState) => {
         ...(token && token !== "__cookie__" ? { Authorization: `Bearer ${token}` } : {}),
       },
       credentials: "include",
-      body: JSON.stringify(payload), // { nombre?, avatar? }
+      body: JSON.stringify(payload),
     });
     const data = await parseResponse(r);
     if (!r.ok) throw new Error(data?.mensaje || data?._raw || "No se pudo actualizar");
-    dispatch({ type: AUTH_UPDATE_PROFILE_SUCCESS, payload: data });
+
+    const userObj = data?.usuario ?? data;      // <-- normaliza
+    dispatch({ type: AUTH_UPDATE_PROFILE_SUCCESS, payload: userObj });
+    return userObj;
   } catch (e) {
-    dispatch({ type: AUTH_UPDATE_PROFILE_FAILURE, payload: e.message });
+    dispatch({ type: AUTH_UPDATE_PROFILE_FAILURE, payload: e.message || String(e) });
+    throw e;
   }
 };
 
-/** ACTUALIZAR AVATAR (archivo) */
 export const updateAvatar = (file) => async (dispatch, getState) => {
   dispatch({ type: AUTH_UPDATE_PROFILE_REQUEST });
   try {
@@ -164,11 +168,17 @@ export const updateAvatar = (file) => async (dispatch, getState) => {
     });
     const data = await parseResponse(r);
     if (!r.ok) throw new Error(data?.mensaje || data?._raw || "No se pudo actualizar imagen");
-    dispatch({ type: AUTH_UPDATE_PROFILE_SUCCESS, payload: data });
+
+    const userObj = data?.usuario ?? data;      // <-- normaliza
+    dispatch({ type: AUTH_UPDATE_PROFILE_SUCCESS, payload: userObj });
+    return userObj;
   } catch (e) {
-    dispatch({ type: AUTH_UPDATE_PROFILE_FAILURE, payload: e.message });
+    dispatch({ type: AUTH_UPDATE_PROFILE_FAILURE, payload: e.message || String(e) });
+    throw e;
   }
 };
+
+
 
 
 export const loginWithGoogle = (idToken, keep=false) => async (dispatch) => {

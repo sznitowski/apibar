@@ -33,6 +33,8 @@
 <frontend/>
   public/
   src/
+   api/auth.js
+  pages/Login.jsx
     components/
       MesaList.tsx
       ProductosMenu.tsx

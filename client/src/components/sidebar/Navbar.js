@@ -1,22 +1,18 @@
-// src/components/sidebar/Navbar.jsx
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { FiBell, FiSun, FiMoon } from "react-icons/fi";
 import UserMenu from "../user/UserMenu";
-import { logout, updatePerfil, updateAvatar } from "../actions/authActions";
+import { logout } from "../actions/authActions";
 
 export default function Navbar({ collapsed, darkMode, toggleTheme }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((s) => s.auth.usuario);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     dispatch(logout());
     navigate("/login", { replace: true });
   };
-
-  const handleSaveProfile = (payload) => dispatch(updatePerfil(payload));
-  const handleChangeAvatar = (file) => dispatch(updateAvatar(file));
 
   return (
     <nav className={`fixed top-0 h-12 z-50 right-0 transition-all duration-300
@@ -35,12 +31,7 @@ export default function Navbar({ collapsed, darkMode, toggleTheme }) {
         <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500"></span>
       </div>
 
-      <UserMenu
-        user={user}
-        onLogout={handleLogout}
-        onSaveProfile={handleSaveProfile}
-        onChangeAvatar={handleChangeAvatar}
-      />
+      <UserMenu user={user} onLogout={handleLogout} />
     </nav>
   );
 }

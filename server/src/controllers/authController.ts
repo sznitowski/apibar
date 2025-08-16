@@ -24,6 +24,7 @@ const cookieOpts = {
   maxAge: REFRESH_DIAS * 24 * 60 * 60 * 1000,
 };
 
+
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ mensaje: 'Email y password son obligatorios' });
@@ -185,3 +186,5 @@ export async function resetPassword(req: Request, res: Response) {
 
   return res.json({ mensaje: 'Contraseña actualizada. Iniciá sesión de nuevo.' });
 }
+
+

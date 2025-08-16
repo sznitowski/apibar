@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/layout/Layout";
 import PrivateRoute from "./components/layout/PrivateRoute";
+import ProfilePage from "./pages/ProfilePage";
 import Login from "./pages/Login";
 
 import ProductOperations from "./components/views/ProductOperations";
@@ -9,7 +10,7 @@ import MesaOperations from "./components/views/MesaOperations";
 import VentasDashboardView from "./components/views/ventas/VentasDashboardView";
 import StockResumen from "./components/views/ventas/StockResumen";
 
-import SessionLoader from "./components/auth/SessionLoader"; // <— hidrata sesión
+import SessionLoader from "./components/auth/SessionLoader"; // hidrata sesión
 import "./index.css";
 
 export default function App() {
@@ -22,6 +23,15 @@ export default function App() {
         <Route path="/login" element={<Login />} />
 
         {/* Privadas */}
+        <Route
+          path="/perfil"
+          element={
+            <PrivateRoute>
+              <Layout><ProfilePage /></Layout>
+            </PrivateRoute>
+          }
+        />
+
         <Route
           path="/productos"
           element={
@@ -55,6 +65,7 @@ export default function App() {
           }
         />
 
+        {/* Redirects */}
         <Route path="/" element={<Navigate to="/ventas/stock" replace />} />
         <Route path="*" element={<Navigate to="/ventas/stock" replace />} />
       </Routes>

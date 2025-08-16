@@ -1,53 +1,74 @@
 // src/components/user/UserMenu.jsx
-import { useState, useRef, useEffect } from "react";
-import { FiLogOut, FiUser, FiSettings, FiEdit } from "react-icons/fi";
-import ProfileModal from "./ProfileModal";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { FiLogOut, FiUser } from "react-icons/fi";
 
-export default function UserMenu({ user, onLogout, onSaveProfile, onChangeAvatar }) {
+const API_HOST = process.env.REACT_APP_API_HOST || "http://localhost:5000";
+
+// Fuerza recarga del avatar cuando cambia (evita caché del navegador)
+const avatarSrc = (raw) => {
+  const fallback =
+    "https://api.dicebear.com/7.x/notionists/svg?seed=Usuario&radius=50";
+  if (!raw) return fallback;
+  const url = /^https?:\/\//i.test(raw) ? raw : `${API_HOST}${raw}`;
+  return `${url}${url.includes("?") ? "&" : "?"}v=${Date.now()}`;
+};
+
+export default function UserMenu({ user, onLogout }) {
   const [open, setOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const menuRef = useRef(null);
+  const nav = useNavigate();
+  const ref = useRef(null);
+
+  // src se recalcula cuando cambia user?.avatar
+  const src = useMemo(() => avatarSrc(user?.avatar), [user?.avatar]);
 
   useEffect(() => {
-    const clickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
+    const onDocClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     };
-    document.addEventListener("mousedown", clickOutside);
-    return () => document.removeEventListener("mousedown", clickOutside);
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  const avatar = user?.avatar || "https://i.pravatar.cc/100?img=3";
-  const nombre = user?.nombre || user?.name || "Usuario";
-  const email = user?.email || "-";
+  const goPerfil = () => {
+    setOpen(false);
+    nav("/perfil");
+  };
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative" ref={ref}>
       <img
-        src={avatar}
+        key={user?.avatar} // ayuda a “forzar” rerender del <img>
+        src={src}
         alt="avatar"
-        className="w-10 h-10 rounded-full border-2 border-white cursor-pointer"
+        className="w-10 h-10 rounded-full border-2 border-white cursor-pointer object-cover bg-gray-800"
         onClick={() => setOpen((v) => !v)}
       />
 
       {open && (
         <div className="absolute right-0 mt-2 w-64 rounded-lg shadow-lg bg-gray-900 border border-gray-700 z-50">
           <div className="p-4 flex items-center space-x-3 border-b border-gray-700">
-            <img src={avatar} alt="avatar" className="w-10 h-10 rounded-full" />
+            <img
+              src={src}
+              alt="avatar"
+              className="w-10 h-10 rounded-full object-cover bg-gray-800"
+            />
             <div>
-              <p className="font-semibold text-white">{nombre}</p>
-              <p className="text-sm text-gray-400">{email}</p>
+              <p className="font-semibold text-white">
+                {user?.nombre || "Usuario"}
+              </p>
+              <p className="text-sm text-gray-400">{user?.email}</p>
             </div>
           </div>
+
           <div className="p-2">
             <button
+              onClick={goPerfil}
               className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded"
-              onClick={() => { setEditOpen(true); setOpen(false); }}
             >
-              <FiEdit className="mr-2" /> Editar perfil
+              <FiUser className="mr-2" /> Perfil
             </button>
-            <button className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded">
-              <FiSettings className="mr-2" /> Seguridad
-            </button>
+
             <button
               onClick={onLogout}
               className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 rounded"
@@ -57,14 +78,6 @@ export default function UserMenu({ user, onLogout, onSaveProfile, onChangeAvatar
           </div>
         </div>
       )}
-
-      <ProfileModal
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        user={user}
-        onSave={(payload) => onSaveProfile(payload)}
-        onChangeAvatar={(file) => onChangeAvatar(file)}
-      />
     </div>
   );
 }
